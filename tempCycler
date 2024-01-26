@@ -1,0 +1,84 @@
+//idk if this converts the arduino to 1kHz...
+// Written Jan 26 2024 Nate Wilson for Information Engineering
+// DHT LED Control - Gradient
+
+#include "DHT.h"
+
+#define DHTPIN 8
+#define DHTTYPE DHT11
+
+#define redOut 9
+#define greenOut 10
+#define blueOut 11
+
+unsigned long startMillis;  //some global variables available anywhere in the program
+unsigned long currentMillis;
+const unsigned long sensorPeriod = 2000;
+const unsigned long writePeriod = 20;
+
+float humOut = 0;
+float humStep = 0;
+float tempOut = 0;
+float tempStep = 0;
+float greenStart = 128;
+float tempDiff;
+float humDiff;
+float humLast = 0;
+float tempLast = 0;
+float humDigi = 0;
+float tempDigi = 0;
+
+
+
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+  dht.begin();
+  startMillis = millis();
+}
+
+
+
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  currentMillis = millis();
+  if(currentMillis - startMillis >= sensorPeriod){
+    Serial.print("Doing sensor cycle");
+
+    //stores current values as last
+    humLast = humDigi;
+    tempLast = tempDigi;
+
+    //collects sensor data and converts to LED final value
+    float humidity = dht.readHumidity();
+    float temperature = dht.readTemperature(true);
+    humDigi = map(humidity, 0, 100, 0, 255);
+    tempDigi = map(temperature, 70, 100, 0, 255);
+
+    //calculates step for write cycle @ 50Hz
+    humDiff = humDigi - humLast;
+    tempDiff = tempDigi - tempLast;
+    float humStep = humDiff / 100;
+    float tempStep = tempDiff / 100;
+
+    //resets clock
+    startMillis = currentMillis;
+  }  
+  if((currentMillis - startMillis) % 20 == 0){
+    Serial.print(" | Doing write cycle ");
+    //writes to LED every 20 ms, then adds step.
+    analogWrite(redOut, humOut);
+    analogWrite(blueOut, tempOut);
+    humOut = humOut + humStep;
+    Serial.print(tempDiff);
+    Serial.print(" ");
+    Serial.println(humDiff);
+    tempOut = tempOut + tempStep;
+  }
+
+
+
+}
