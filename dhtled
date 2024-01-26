@@ -1,0 +1,53 @@
+// Written Jan 25 2024 Nate Wilson for Information Engineering
+// DHT LED Control
+
+#include "DHT.h"
+
+#define DHTPIN 8
+#define DHTTYPE DHT11
+
+#define redOut 9
+#define greenOut 10
+#define blueOut 11
+
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  Serial.begin(9600);
+  dht.begin();
+}
+
+//saves my fingers :p
+void color(int x, int y, int z){
+  analogWrite(redOut, x);
+  analogWrite(greenOut, y);
+  analogWrite(blueOut, z);
+}
+
+//transitions LED color smoothly, however needs to run in parallel. Could run both through here or I could use the millis() thing.
+void transition(float i, float f, int pin){
+  float distance = f - i;
+  int step = distance / 60; //This divides the difference into a step for each cycle, targeting 60Hz.
+  int colorIndex = i;
+  while(i < f){
+    analogWrite(pin, colorIndex);
+    colorIndex = colorIndex + step;
+    delay(33); //Waits 2000/60 ms.
+  }
+}
+
+
+void loop() {
+  delay(2000);
+  float humidity = dht.readHumidity();
+  float fahrenheit = dht.readTemperature(true);
+
+  if(isnan(humidity) || isnan(fahrenheit)){
+    Serial.println("Reading failed");
+    return;
+  }
+
+
+
+
+}
