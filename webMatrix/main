@@ -16,10 +16,15 @@ WifiServer server(80);
 
 
 
-unsigned long frame[]{
-  0x0000000,
-  0x0000000,
-  0x0000000
+uint8_t frame[8][12] = {
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 void flipPixel(int rowf, int columnf){ //using rowf and columnf to distinguish from global variables
@@ -122,34 +127,34 @@ void loop() {
 
 }
 
-void letterToColumn[char letter]{
+int letterToColumn[char letter]{
   if(letter < 77){ //checks ascii value of letter, capital A-L are constitute values 65-76, lowercase characters are 32 more than their uppercase
     letter += 32;
   } 
   switch(letter){
-    case "a":
+    case 'a':
       return 1;
-    case "b":
+    case 'b':
       return 2;
-    case "c":
+    case 'c':
       return 3;
-    case "d":
+    case 'd':
       return 4;
-    case "e":
+    case 'e':
       return 5;
-    case "f":
+    case 'f':
       return 6;
-    case "g":
+    case 'g':
       return 7;
-    case "h":
+    case 'h':
       return 8;
-    case "i":
+    case 'i':
       return 9;
-    case "j":
+    case 'j':
       return 10;
-    case "k":
+    case 'k':
       return 11;
-    case "l":
+    case 'l':
       return 12;
   }
 }
