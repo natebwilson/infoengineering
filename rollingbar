@@ -1,0 +1,60 @@
+#import "Arduino_LED_Matrix.h"
+#import "DHT.h"
+
+#define DHTPIN 2
+#define DHTTYPE DHT11
+
+DHT dht(DHTPIN, DHTTYPE);
+ArduinoLEDMatrix matrix;
+
+byte nextBar = 0;
+int nextPower = 0;
+
+uint32_t frame[] = {
+  0, 0, 0
+};
+
+
+void frameWrite(byte buffer){
+  for(int i = 0; i < 8, i++){
+    if(bitRead(buffer, i) == 0){
+      return;
+    }
+    if(i < 3,){
+      bitWrite(frame[2], 12 * i, 1);
+      return;
+    }
+    if(i < 6 )
+  }
+}
+
+
+
+
+void.setup(){
+  Serial.begin(9600);
+  Serial.println("Online");
+  dht.begin();
+  matrix.begin();
+}
+
+void loop(){
+  delay(2000); //reading delay
+  float f = dht.readTemperature(true);
+  if (isnan(f)){
+    Serial.println("Failed to read from DHT sensor!");
+    return;
+  }
+  Serial.println(f);
+
+  //maps temperature reading from a defined range into a number of leds to be activated in a given bar
+  nextPower = map(f, 62, 80, 0, 8);
+
+  // converts power into the next temperature bar, which are each stored as a byte using 1 bit for each led 
+  // 0 encodes 0000000 , 1 encodes 00000001 , 2 encodes 00000011
+  nextBar = pow(2, nextPower) - 1; 
+
+
+
+
+}
