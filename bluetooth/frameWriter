@@ -1,0 +1,54 @@
+//Abstract:
+//Program that can compile bitmap into three unsigned long 'packets'
+
+byte arrayFrame[8][12] = { //standard array frame
+  {0,0,0,0,0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0,0,0,0,0}
+};
+
+
+//Packets that the array will be broken down into
+unsigned long frame[] = {
+  0,0,0
+};
+
+
+
+void frameCompile() {
+  //creates a byte array to which write each bitmap value to
+  byte longBuffer[96]; 
+
+  //iterates through each element of our 'long' buffer
+  int bufferIndex = 0;
+
+  //writes frame data to long buffer
+  for(int row = 0; row < 8; row++){
+    for(int col = 0; col < 12; col++){
+      longBuffer[bufferIndex] = arrayFrame[row][col];
+      bufferIndex++;
+    }
+  }
+
+  //Resets index for writing packets
+  bufferIndex = 0;
+
+  //Iterates through each packet
+  for(int packet = 0; packet < 3; packet++){
+
+    //Since bit positions are indexed right to left, and our buffer is indexed left to right, this for loop needs to count 'down'
+    for(int packetIndex = 31; packetIndex >= 0; packet--){
+      bitWrite(frame[packet], packetIndex, longBuffer[bufferIndex]);
+
+      //Keeps track of buffer position, increases by one regardless of packet changes
+      bufferIndex++; 
+    }
+  }
+}
+
+
