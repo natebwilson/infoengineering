@@ -25,6 +25,8 @@
 #include <ArduinoBLE.h>
 #include "Arduino_LED_Matrix.h"
 
+
+
 ArduinoLEDMatrix matrix;
 
 
@@ -48,6 +50,7 @@ unsigned long frame[] = { //these values are stored in hex bc bluetooth handles 
 
 void setup() {
   Serial.begin(9600);
+  pinMode(buttonPin, )
   matrix.begin();
   BLE.begin();
   Serial.println(BLE.begin()); //prints if BLE has been initiated
@@ -102,6 +105,3 @@ void loop() {
     Serial.print("Disconnected from host");
   }
 }
-
-
-
