@@ -1,0 +1,133 @@
+//Abstract
+//Program that writes a frame to bluetooth
+//Built off my frameWriter.ino
+
+//Notes:
+//We could possibly do this with only two characteristics, simply sending one bit per 'cycle' on a writeable bit and iterating after receiving an 'ok' signal from host
+
+#include <ArduinoBLE.h>
+
+
+byte arrayFrame[8][12] = { //standard array frame
+  {0,0,0,0,0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0,0,0,0,0},
+  {0,0,0,0,0,0,0,0,0,0,0,0}
+};
+
+
+//Packets that the array will be broken down into
+unsigned long frame[] = {
+  0,0,0
+};
+
+void frameCompile() {
+  //creates a byte array to which write each array value to, will be 96 bytes long
+  byte longBuffer[96]; 
+
+  //iterates through each element of our 'long' buffer
+  int bufferIndex = 0;
+
+  //writes frame data to long buffer
+  for(int row = 0; row < 8; row++){
+    for(int col = 0; col < 12; col++){
+      longBuffer[bufferIndex] = arrayFrame[row][col];
+      bufferIndex++;
+    }
+  }
+
+  //Resets index for writing packets
+  bufferIndex = 0;
+
+  //Iterates through each packet
+  for(int packet = 0; packet < 3; packet++){
+
+    //Since bit positions are indexed right to left, and our buffer is indexed left to right, this for loop needs to count 'down'
+    for(int packetIndex = 31; packetIndex >= 0; packetIndex--){
+      bitWrite(frame[packet], packetIndex, longBuffer[bufferIndex]);
+
+      //Keeps track of buffer position, increases by one regardless of packet changes
+      bufferIndex++; 
+    }
+  }
+}
+
+
+
+
+
+void setup() {
+  Serial.begin(9600);
+  while (!Serial);
+
+  BLE.begin();
+  Serial.println(BLE.begin());
+
+  BLE.scanForUuid("db032de5-b611-4fc8-ad63-db2d76964864");
+
+}
+
+void loop() {
+  BLEDevice peripheral = BLE.available();
+  
+  if(peripheral){
+    Serial.println("Device found");
+
+    if(peripheral.localName() != "MatrixHost"){
+      return;
+    }
+
+    BLE.stopScan();
+
+    controlMatrix(peripheral);
+
+  }
+
+}
+
+void controlMatrix(BLEDevice peripheral){
+  if(peripheral.connect()){
+    Serial.println("Connected");
+  } else {
+    Serial.println("Failed to connect");
+    return;
+  }
+
+  //Defines BLE Services we will use
+  BLECharacteristic frameZero = peripheral.characteristic("46afe1eb-f91f-4e58-a7a6-2222c2ec7ab0");
+  BLECharacteristic frameOne = peripheral.characteristic("47afe1eb-f91f-4e58-a7a6-2222c2ec7ab0");
+  BLECharacteristic frameTwo = peripheral.characteristic("48afe1eb-f91f-4e58-a7a6-2222c2ec7ab0");
+
+  if(!frameZero || !frameOne || !frameTwo){
+    Serial.println("Device does not have proper characteristics");
+    return;
+  }
+
+  while(peripheral.connected()){
+    //Insert some code to monitor/to affect the arrayFrame, ex. button -> changes pixel
+    if(1){ //probably should check if any input has changed
+      frameCompile();
+      frameZero.writeValue(frame[0]);
+      frameOne.writeValue(frame[1]);
+      frameTwo.writeValue(frame[2]);
+    }
+
+  }
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
