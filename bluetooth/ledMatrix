@@ -1,0 +1,107 @@
+//Bluetooth LED Matrix
+//Modified from Bluetooth LED receiver code
+
+//Abstract:
+//Bluetooth Central will send hex value that encodes a frame, frame will
+//The MatrixHost will have three characteristics, each an unsigned long which encodes one of three entries in an array
+
+//Future improvements:
+//Bluetooth LE characteristics can hold values up to 512 bytes - a single frame (stored compactly) is 12 bytes
+//Therefore, it seems possible to transmit entire animations through Bluetooth - a maximum of 42 frames per characteristic
+//Also - this code was tested using LightBlue, meaning I couldn't simultaneously write to more than one characteristic at a time, so I need to test three updates simul.
+
+//Note on testing with LightBlue
+//Since you can only write hex values to characteristics, I didn't manage to make any meaningful images - but decimal values of 1, 3, 7, 15 turn on sequential LEDS, so it works..
+
+
+//Note on LED matrix frames:
+//There are two different methods to update the matrix - .loadFrame and .renderBitmap
+//loadFrame will interpret the binary value of whatever is passed to it
+//renderBitmap expects an array of values and then assigns each value to an LED
+//i suspect renderBitmap only checks if value != 0, which could lead to some interesting implementations...
+//TLDR: binary frame -> loadFrame, array frame -> renderBitmap
+
+
+#include <ArduinoBLE.h>
+#include "Arduino_LED_Matrix.h"
+
+ArduinoLEDMatrix matrix;
+
+
+BLEService matrixService("db032de5-b611-4fc8-ad63-db2d76964864"); //using randomly generated UUID
+
+
+//i'm not sure if you can have a characteristic that encodes 12 bytes, again, written on a flight
+//specifically check https://www.arduino.cc/reference/en/libraries/arduinoble/blecharacteristic/
+//it seems that you can pass a mandated value to these characteristics, but I am unable to test while on this flight 
+BLEUnsignedLongCharacteristic frameZero("46afe1eb-f91f-4e58-a7a6-2222c2ec7ab0", BLERead | BLEWrite); //controls frame[0]
+BLEUnsignedLongCharacteristic frameOne("47afe1eb-f91f-4e58-a7a6-2222c2ec7ab0", BLERead | BLEWrite); //controls frame[1]
+BLEUnsignedLongCharacteristic frameTwo("48afe1eb-f91f-4e58-a7a6-2222c2ec7ab0", BLERead | BLEWrite);  //controls frame [2]
+
+unsigned long frame[] = { //these values are stored in hex bc bluetooth handles values in hex, but will be converted into binary by compiler
+  0x00000000,
+  0x00000000,
+  0x00000000
+};
+
+
+
+void setup() {
+  Serial.begin(9600);
+  matrix.begin();
+  BLE.begin();
+  Serial.println(BLE.begin()); //prints if BLE has been initiated
+
+  //intialized device name
+  BLE.setLocalName("MatrixHost");
+  BLE.setDeviceName("MatrixHost");
+
+  matrixService.addCharacteristic(frameZero); // adds characteristic to service
+  matrixService.addCharacteristic(frameOne);
+  matrixService.addCharacteristic(frameTwo);
+
+
+  BLE.addService(matrixService);//adds service to BLE
+
+  BLE.setAdvertisedService(matrixService); //advertises the service from the BLE stack
+
+  BLE.advertise();
+  Serial.println("Setup complete");
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  BLEDevice central = BLE.central();
+  if(central){
+    Serial.print("Connected to: ");
+    Serial.println(central.address());
+
+    while(central.connected()){
+      int updateReceived = 0; //simple update checker, board will not write to matrix unless new data is received
+
+      //In this code, the central host encodes the frame data into the characteristics
+      if(frameZero.written()){
+        frame[0] = frameZero.value();
+        updateReceived = 1;
+      }
+      if(frameOne.written()){
+        frame[1] = frameOne.value();
+        updateReceived = 1;
+      }
+      if(frameTwo.written()){
+        frame[2] = frameTwo.value();
+        updateReceived = 1;
+      }
+      if(updateReceived){
+        Serial.println("Frame data received");
+        matrix.loadFrame(frame);
+
+      }
+
+    }
+    Serial.print("Disconnected from host");
+  }
+}
+
+
+
