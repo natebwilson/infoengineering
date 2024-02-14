@@ -42,7 +42,7 @@ void frameCompile() {
   for(int packet = 0; packet < 3; packet++){
 
     //Since bit positions are indexed right to left, and our buffer is indexed left to right, this for loop needs to count 'down'
-    for(int packetIndex = 31; packetIndex >= 0; packet--){
+    for(int packetIndex = 31; packetIndex >= 0; packetIndex--){
       bitWrite(frame[packet], packetIndex, longBuffer[bufferIndex]);
 
       //Keeps track of buffer position, increases by one regardless of packet changes
