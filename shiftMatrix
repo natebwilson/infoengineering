@@ -85,6 +85,7 @@ void loop() {
 
 
   if(lastWriteState == LOW && writeState == HIGH){ // this part can be modified to use a bluetooth client.
+    Serial.println("Write Received");
     frame[row][col] = !frame[row][col];
     row = 0;
     col = 0;
@@ -92,6 +93,7 @@ void loop() {
 
   //Increments the row counter if the button is pressed, rolls back to zero if the current value is 8.
   if(lastRowState == LOW && rowState == HIGH){
+    Serial.println("Row Received");
     if(row == 7){
       row = 0;
     }else{
@@ -101,6 +103,7 @@ void loop() {
 
   //Increments the column counter if the button is pressed, rolls back to zero if the current value is 12.
   if(lastColState == LOW && colState == HIGH){
+    Serial.println("Column Received");
     if(col == 11){
       col = 0;
     }else{
