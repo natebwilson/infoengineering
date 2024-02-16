@@ -21,7 +21,7 @@ uint8_t frame[8][12] = {
 //OUTPUT 1 > G
 //OUTPUT 0 > NULL
 
-byte digit[10] = { //Stores shift register binary sequences
+byte digit[10] = {  //Stores shift register binary sequences
   //00111111
   63,
   //00000110
@@ -84,7 +84,7 @@ void loop() {
   colState = digitalRead(colButton);
 
 
-  if(lastWriteState == LOW && writeState == HIGH){ // this part can be modified to use a bluetooth client.
+  if (lastWriteState == LOW && writeState == HIGH) {  // this part can be modified to use a bluetooth client.
     Serial.println("Write Received");
     frame[row][col] = !frame[row][col];
     row = 0;
@@ -92,38 +92,37 @@ void loop() {
   }
 
   //Increments the row counter if the button is pressed, rolls back to zero if the current value is 8.
-  if(lastRowState == LOW && rowState == HIGH){
+  if (lastRowState == LOW && rowState == HIGH) {
     Serial.println("Row Received");
-    if(row == 7){
+    if (row == 7) {
       row = 0;
-    }else{
+    } else {
       row++;
     }
   }
 
   //Increments the column counter if the button is pressed, rolls back to zero if the current value is 12.
-  if(lastColState == LOW && colState == HIGH){
+  if (lastColState == LOW && colState == HIGH) {
     Serial.println("Column Received");
-    if(col == 11){
+    if (col == 11) {
       col = 0;
-    }else{
+    } else {
       col++;
     }
   }
 
   digitalWrite(latchPin, LOW);
   shiftOut(dataPin, clockPin, LSBFIRST, 64);
-  shiftOut(dataPin, clockPin, LSBFIRST, digit[row+1]);
+  shiftOut(dataPin, clockPin, LSBFIRST, digit[row + 1]);
   digitalWrite(latchPin, HIGH);
 
   digitalWrite(latchPin, LOW);
   shiftOut(dataPin, clockPin, LSBFIRST, 32);
-  shiftOut(dataPin, clockPin, LSBFIRST, digit[col/10]);
+  shiftOut(dataPin, clockPin, LSBFIRST, digit[(col + 1) / 10]);
   digitalWrite(latchPin, HIGH);
 
   digitalWrite(latchPin, LOW);
   shiftOut(dataPin, clockPin, LSBFIRST, 16);
-  shiftOut(dataPin, clockPin, LSBFIRST, digit[(col%10)+1]);
+  shiftOut(dataPin, clockPin, LSBFIRST, digit[((col + 1) % 10)]);
   digitalWrite(latchPin, HIGH);
-
 }
