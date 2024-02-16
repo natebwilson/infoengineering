@@ -55,6 +55,7 @@ int latchPin = 11;
 int lastWriteState;
 int lastRowState;
 int lastColState;
+int matrixWrite = 0;
 int writeState = LOW;
 int rowState = LOW;
 int colState = LOW;
@@ -89,6 +90,7 @@ void loop() {
     frame[row][col] = !frame[row][col];
     row = 0;
     col = 0;
+    matrixWrite = 1;
   }
 
   //Increments the row counter if the button is pressed, rolls back to zero if the current value is 8.
@@ -125,4 +127,9 @@ void loop() {
   shiftOut(dataPin, clockPin, LSBFIRST, 16);
   shiftOut(dataPin, clockPin, LSBFIRST, digit[((col + 1) % 10)]);
   digitalWrite(latchPin, HIGH);
+
+  if(matrixWrite){
+    matrix.renderBitmap(frame);
+    matrixWrite = 0;
+  }
 }
