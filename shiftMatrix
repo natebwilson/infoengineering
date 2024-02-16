@@ -1,0 +1,126 @@
+#include "Arduino_LED_Matrix.h"
+
+uint8_t frame[8][12] = {
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+};
+
+//REFERENCE:
+//OUTPUT 7 > A
+//OUTPUT 6 > B
+//OUTPUT 5 > C
+//OUTPUT 4 > D
+//OUTPUT 3 > E
+//OUTPUT 2 > F
+//OUTPUT 1 > G
+//OUTPUT 0 > NULL
+
+byte digit[10] = { //Stores shift register binary sequences
+  //00111111
+  63,
+  //00000110
+  6,
+  //01011011
+  91,
+  //01001111
+  79,
+  //01100110
+  102,
+  //01101101
+  109,
+  //01111101
+  125,
+  //00000111
+  7,
+  //01111111
+  127,
+  //01101111
+  111
+};
+
+
+ArduinoLEDMatrix matrix;
+int writeButton = 1;
+int colButton = 2;
+int rowButton = 3;
+int dataPin = 9;
+int clockPin = 10;
+int latchPin = 11;
+int lastWriteState;
+int lastRowState;
+int lastColState;
+int writeState = LOW;
+int rowState = LOW;
+int colState = LOW;
+int row;
+int col;
+
+
+void setup() {
+  Serial.begin(9600);
+  matrix.begin();
+  pinMode(dataPin, OUTPUT);
+  pinMode(clockPin, OUTPUT);
+  pinMode(latchPin, OUTPUT);
+  pinMode(writeButton, INPUT);
+  pinMode(colButton, INPUT);
+  pinMode(rowButton, INPUT);
+}
+
+void loop() {
+  //Save the last button states
+  lastWriteState = writeState;
+  lastRowState = rowState;
+  lastColState = colState;
+  //Read new button states
+  writeState = digitalRead(writeButton);
+  rowState = digitalRead(rowButton);
+  colState = digitalRead(colButton);
+
+
+  if(lastWriteState == LOW && writeState == HIGH){ // this part can be modified to use a bluetooth client.
+    frame[row][col] = !frame[row][col];
+    row = 0;
+    col = 0;
+  }
+
+  //Increments the row counter if the button is pressed, rolls back to zero if the current value is 8.
+  if(lastRowState == LOW && rowState == HIGH){
+    if(row == 7){
+      row = 0;
+    }else{
+      row++;
+    }
+  }
+
+  //Increments the column counter if the button is pressed, rolls back to zero if the current value is 12.
+  if(lastColState == LOW && colState == HIGH){
+    if(col == 11){
+      col = 0;
+    }else{
+      col++;
+    }
+  }
+
+  digitalWrite(latchPin, LOW);
+  shiftOut(dataPin, clockPin, LSBFIRST, 64);
+  shiftOut(dataPin, clockPin, LSBFIRST, digit[row+1]);
+  digitalWrite(latchPin, HIGH);
+
+  digitalWrite(latchPin, LOW);
+  shiftOut(dataPin, clockPin, LSBFIRST, 32);
+  shiftOut(dataPin, clockPin, LSBFIRST, digit[col/10]);
+  digitalWrite(latchPin, HIGH);
+
+  digitalWrite(latchPin, LOW);
+  shiftOut(dataPin, clockPin, LSBFIRST, 16);
+  shiftOut(dataPin, clockPin, LSBFIRST, digit[(col%10)+1]);
+  digitalWrite(latchPin, HIGH);
+
+}
