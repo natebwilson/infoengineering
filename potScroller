@@ -1,0 +1,58 @@
+#include "Arduino_LED_Matrix.h"
+
+ArduinoLEDMatrix matrix;
+
+int sensorPin = A1;
+int sensorReading;
+int nextCol;
+int counterIndex;
+
+byte frame[8][12] = {
+	{0,0,0,0,0,0,0,0,0,0,0,0},
+	{0,0,0,0,0,0,0,0,0,0,0,0},
+	{0,0,0,0,0,0,0,0,0,0,0,0},
+	{0,0,0,0,0,0,0,0,0,0,0,0},
+	{0,0,0,0,0,0,0,0,0,0,0,0},
+	{0,0,0,0,0,0,0,0,0,0,0,0},
+	{0,0,0,0,0,0,0,0,0,0,0,0},
+	{0,0,0,0,0,0,0,0,0,0,0,0}
+};
+
+void setup(){
+	Serial.begin(9600);
+	matrix.begin();
+	pinMode(sensorPin, INPUT);
+}
+
+void loop(){
+	sensorReading = analogRead(sensorPin); //this is coded for a potentiometer, but you could use this w/ anything
+  Serial.print(sensorReading);
+	nextCol = map(sensorReading, 0, 1023, 0, 8);
+	Serial.print(" ");
+  Serial.println(nextCol);
+
+	//shift columns to left
+	for(int col = 0; col < 11; col++){ //we don't want to write to column 11, this is the next data
+		for(int row = 0; row < 8; row++){
+			frame[row][col] = frame[row][col + 1];
+		}	
+	}
+
+  //reset the counterIndex, and for each iteration of the forloop we check if we should still be writing
+  counterIndex = 0;
+	for(int i = 7; i >= 0; i--){
+    if(counterIndex < nextCol){
+      frame[i][11] = 1;
+    }else{
+      frame[i][11] = 0;
+    }
+    counterIndex++;
+  }
+
+
+	
+
+
+	matrix.renderBitmap(frame, 8, 12);
+	delay(100); //this code would run WAY too fast and the display would basically only display the current reading, 10Hz should be a suitable frequency here.
+}
