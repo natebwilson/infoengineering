@@ -27,7 +27,7 @@ void setup(){
 void loop(){
 	sensorReading = analogRead(sensorPin); //this is coded for a potentiometer, but you could use this w/ anything
   Serial.print(sensorReading);
-	nextCol = map(sensorReading, 0, 1023, 0, 8);
+	nextCol = map(sensorReading, 0, 1023, 0, 8); // returns how many leds should be enabled, from zero to eight
 	Serial.print(" ");
   Serial.println(nextCol);
 
@@ -40,7 +40,7 @@ void loop(){
 
   //reset the counterIndex, and for each iteration of the forloop we check if we should still be writing
   counterIndex = 0;
-	for(int i = 7; i >= 0; i--){
+	for(int i = 7; i >= 0; i--){ //this loop counts down since the lowest row is indexed the highest
     if(counterIndex < nextCol){
       frame[i][11] = 1;
     }else{
@@ -48,10 +48,6 @@ void loop(){
     }
     counterIndex++;
   }
-
-
-	
-
 
 	matrix.renderBitmap(frame, 8, 12);
 	delay(100); //this code would run WAY too fast and the display would basically only display the current reading, 10Hz should be a suitable frequency here.
