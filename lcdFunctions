@@ -1,0 +1,42 @@
+void clearDisplay(){
+  digitalWrite(latchPin, LOW);
+  shiftOut(dataPin, clockPin, MSBFirst, 1);
+  digitalWrite(latchPin, HIGH);
+  digitalWrite(enablePin, HIGH); //the enable pin needs to be high for ~300ns, the arduino takes about 3 us to execute, so we should be fine :)
+  digitalWrite(enablePin, LOW);
+}
+
+void returnHome(){
+  digitalWrite(latchPin, LOW);
+  shiftOut(dataPin, clockPin, MSBFirst, 2);
+  digitalWrite(latchPin, HIGH);
+  digitalWrite(enablePin, HIGH); 
+  digitalWrite(enablePin, LOW);
+}
+
+void displayOn(){
+  digitalWrite(latchPin, LOW);
+  shiftOut(dataPin, clockPin, MSBFirst, 12); // this hard codes the cursor and blink function off, you could have bool parameters to perform bitflips if you want to change this
+  digitalWrite(latchPin, HIGH);
+  digitalWrite(enablePin, HIGH); 
+  digitalWrite(enablePin, LOW);
+}
+
+void functionSet(){
+  digitalWrite(latchPin, LOW);
+  shiftOut(dataPin, clockPin, MSBFirst, 48); // this hard codes to 8-bit mode and 1 line, again, changeable.
+  digitalWrite(latchPin, HIGH);
+  digitalWrite(enablePin, HIGH); 
+  digitalWrite(enablePin, LOW);
+}
+
+void writeChar(char input){
+  uint16_t val = 512 | input; // we need to set the 10th bit on, so we perform a bitwise OR, essentially writing the char to lower 8 bits
+  digitalWrite(latchPin, LOW);
+  shiftOut(dataPin, clockPin, MSBFirst, val >> 8); // we need to shift right 8 bits since shiftOut can only be passed a byte
+  shiftOut(dataPin, clockPin, MSBFirst, val);
+  digitalWrite(latchPin, HIGH);
+  digitalWrite(enablePin, HIGH);
+  digitalWrite(enablePin, LOW);
+
+}
