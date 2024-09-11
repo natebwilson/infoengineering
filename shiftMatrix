@@ -21,7 +21,7 @@ uint8_t frame[8][12] = {
 //OUTPUT 1 > G
 //OUTPUT 0 > NULL
 
-byte digit[10] = {  //Stores shift register binary sequences
+byte digit[10] = {  //Stores shift register binary sequences for each digit, digit[i] is the code for i.
   //00111111
   63,
   //00000110
@@ -113,20 +113,27 @@ void loop() {
     }
   }
 
+  //Beginning of write sequence to cell selector
+  //The display can't display four unique values, so we rapidly toggle on/off in sequence
+  //Individual segments are activated when they are allowed to pass to ground, so we first shiftout a bit that enables each segment's transistor
+  //We then shift out the digit binary for that segment, then we set the latch pin high, updating the outputs of the shift registers
+
   digitalWrite(latchPin, LOW);
-  shiftOut(dataPin, clockPin, LSBFIRST, 64);
+  shiftOut(dataPin, clockPin, LSBFIRST, 64); // 64 = 00100000, allowing only segment one to ground
   shiftOut(dataPin, clockPin, LSBFIRST, digit[row + 1]);
   digitalWrite(latchPin, HIGH);
 
   digitalWrite(latchPin, LOW);
-  shiftOut(dataPin, clockPin, LSBFIRST, 32);
+  shiftOut(dataPin, clockPin, LSBFIRST, 32); // 32 = 0001000, allowing only segment three to ground
   shiftOut(dataPin, clockPin, LSBFIRST, digit[(col + 1) / 10]);
   digitalWrite(latchPin, HIGH);
 
   digitalWrite(latchPin, LOW);
-  shiftOut(dataPin, clockPin, LSBFIRST, 16);
-  shiftOut(dataPin, clockPin, LSBFIRST, digit[((col + 1) % 10)]);
+  shiftOut(dataPin, clockPin, LSBFIRST, 16); // 16 = 00001000, allowing only segment four to ground
+  shiftOut(dataPin, clockPin, LSBFIRST, digit[((col + 1) % 10)]); 
   digitalWrite(latchPin, HIGH);
+
+  //If a write was submitted from the cell selector, then we update the onboard led matrix
 
   if(matrixWrite){
     matrix.renderBitmap(frame);
